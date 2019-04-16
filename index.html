@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Florida Keys Vessel Noise Simulation</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+<script src="./images/data_file.js"></script>
+<script>
+//Sets up the map
+mapboxgl.accessToken = 'pk.eyJ1Ijoic3dyaWNjaSIsImEiOiJjanM0eWJsNXAwYTVvNDVvejlzYmwxbm1qIn0.7IKg-rHkTxLrfbjdMgWsew';
+var map = new mapboxgl.Map({
+    container: 'map',
+    zoom: 12,
+    center: [-81.75,24.5],
+    pitch: 45,
+    style: 'mapbox://styles/mapbox/satellite-v9'
+});
+//Add Navigation Controls
+map.addControl(new mapboxgl.NavigationControl());
+//The total numbers of images found in data_file.js 
+var frameCount = layerInfos.length;
+//Default used to start animation with first image
+var currentImage = 0;
+//Gets the current image
+function getPath() {
+    return "images/" + layerInfos[currentImage].file;
+}
+ 
+//var bounds = [-82.25, 24.31, -80.75, 24.73]
+ 
+//We need to wait for the map to load before we add the raster layer
+map.on('load', function() {
+ 
+    //Create a new map source with the bounding box and url to your raster data.
+    map.addSource("grass", {
+        type: "image",
+        //Replace static file with function
+        url: getPath(), 
+        //Gets the bounds of the first image listed in images/data_file.js
+        coordinates: [-82.25, 24.31, -80.75, 24.73]
+    });
+    //Now add a new layer to the map from the source you created
+    map.addLayer({
+        id: "grass-layer",
+        "type": "raster",
+        "source": "grass",
+        "paint": {
+            "raster-fade-duration": 0
+        }
+    });
+    //Will update image every 200ms
+    setInterval(function() {
+        currentImage = (currentImage + 1) % frameCount;
+        map.getSource("grass").updateImage({ url: getPath() });
+    }, 200);
+ 
+});
+    
+    
+</script>
+
+</body>
+</html>
