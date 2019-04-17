@@ -35,8 +35,15 @@ var currentImage = 0;
 function getPath() {
     return "images/" + layerInfos[currentImage].file;
 }
- 
-//var bounds = [-82.25, 24.31, -80.75, 24.73]
+//Convert Bounds to match mapbox gl source specs
+function grassBbox(bounds) {
+    return [
+        [bounds[1][1], bounds[1][0]],
+        [bounds[0][1], bounds[1][0]],
+        [bounds[0][1], bounds[0][0]],           
+        [bounds[1][1], bounds[0][0]]
+    ];
+}
  
 //We need to wait for the map to load before we add the raster layer
 map.on('load', function() {
@@ -47,7 +54,7 @@ map.on('load', function() {
         //Replace static file with function
         url: getPath(), 
         //Gets the bounds of the first image listed in images/data_file.js
-        coordinates: [-82.25, 24.31, -80.75, 24.73]
+        coordinates: grassBbox(layerInfos[0].bounds)
     });
     //Now add a new layer to the map from the source you created
     map.addLayer({
