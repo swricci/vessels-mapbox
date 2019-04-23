@@ -4,8 +4,8 @@
     <meta charset='utf-8' />
     <title>Florida Keys Vessel Noise Simulation</title>
     <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
-    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.js'></script>
-    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.0/mapbox-gl.css' rel='stylesheet' />
+    <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.js'></script>
+    <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.53.1/mapbox-gl.css' rel='stylesheet' />
     <style>
         body { margin:0; padding:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
@@ -13,10 +13,59 @@
 </head>
 <body>
 
+<style>
+        #menu {
+            background: #fff;
+            position: absolute;
+            z-index: 1;
+            top: 10px;
+            right: 10px;
+            border-radius: 3px;
+            width: 120px;
+            border: 1px solid rgba(0,0,0,0.4);
+            font-family: 'Open Sans', sans-serif;
+        }
+    
+        #menu a {
+            font-size: 13px;
+            color: #404040;
+            display: block;
+            margin: 0;
+            padding: 0;
+            padding: 10px;
+            text-decoration: none;
+            border-bottom: 1px solid rgba(0,0,0,0.25);
+            text-align: center;
+        }
+    
+        #menu a:last-child {
+            border: none;
+        }
+    
+        #menu a:hover {
+            background-color: #f8f8f8;
+            color: #404040;
+        }
+    
+        #menu a.active {
+            background-color: #3887be;
+            color: #ffffff;
+        }
+    
+        #menu a.active:hover {
+            background: #3074a4;
+        }
+</style>
+
+<nav id="menu"></nav>
 <div id='map'></div>
+
 <script src="./images/data_file.js"></script>
+<script src="./images/data_file2.js"></script> 
 <script>
 //Sets up the map
+//create two sets of everything (data_file.js, getBbox, getPath)
+
 mapboxgl.accessToken = 'pk.eyJ1Ijoic3dyaWNjaSIsImEiOiJjanM0eWJsNXAwYTVvNDVvejlzYmwxbm1qIn0.7IKg-rHkTxLrfbjdMgWsew';
 var map = new mapboxgl.Map({
     container: 'map',
@@ -25,18 +74,25 @@ var map = new mapboxgl.Map({
     pitch: 45,
     style: 'mapbox://styles/mapbox/satellite-v9'
 });
+
 //Add Navigation Controls
-map.addControl(new mapboxgl.NavigationControl());
+//map.addControl(new mapboxgl.NavigationControl());
+
+
+//Set up vessel-1 (use data_file.js)
 //The total numbers of images found in data_file.js 
 var frameCount = layerInfos.length;
+
 //Default used to start animation with first image
 var currentImage = 0;
+
 //Gets the current image
+//add image id here to filter data_file.js to just images for each layer?
 function getPath() {
     return "images/" + layerInfos[currentImage].file;
 }
 //Convert Bounds to match mapbox gl source specs
-function grassBbox(bounds) {
+function getBbox(bounds) {
     return [
         [bounds[1][1], bounds[1][0]],
         [bounds[0][1], bounds[1][0]],
@@ -49,18 +105,21 @@ function grassBbox(bounds) {
 map.on('load', function() {
  
     //Create a new map source with the bounding box and url to your raster data.
-    map.addSource("grass", {
+    map.addSource("vessel1", {
         type: "image",
         //Replace static file with function
         url: getPath(), 
         //Gets the bounds of the first image listed in images/data_file.js
-        coordinates: grassBbox(layerInfos[0].bounds)
+        coordinates: getBbox(layerInfos[0].bounds)
     });
     //Now add a new layer to the map from the source you created
     map.addLayer({
-        id: "grass-layer",
+        id: "vessel1",
         "type": "raster",
-        "source": "grass",
+        "source": "vessel1",
+        'layout': {
+            'visibility': 'visible'
+        },
         "paint": {
             "raster-fade-duration": 0
         }
@@ -68,11 +127,75 @@ map.on('load', function() {
     //Will update image every 200ms
     setInterval(function() {
         currentImage = (currentImage + 1) % frameCount;
-        map.getSource("grass").updateImage({ url: getPath() });
+        map.getSource("vessel1").updateImage({ url: getPath() });
     }, 200);
  
+
+//Create a SECOND new map source with the bounding box and url to your raster data.
+ var currentImage2 = 0;
+    var frameCount2 = layerInfos2.length;
+    function getPath2() {
+        return "images/" + layerInfos2[currentImage2].file;
+    }
+
+    map.addSource("vessel2", {
+        type: "image",
+        //Replace static file with function
+        url: getPath2(), 
+        //Gets the bounds of the first image listed in images/data_file.js
+        coordinates: getBbox(layerInfos2[0].bounds)
+    });
+    //Now add a new layer to the map from the source you created
+    map.addLayer({
+        id: "vessel2",
+        "type": "raster",
+        "source": "vessel2",
+        'layout': {
+            'visibility': 'visible'
+        },
+        "paint": {
+            "raster-fade-duration": 0
+        }
+    });
+
+    //Will update image every 200ms
+    setInterval(function() {
+        currentImage2 = (currentImage2 + 1) % frameCount2;
+        map.getSource("vessel2").updateImage({ url: getPath2() });
+    }, 200);
+      
+ 
 });
-    
+
+var toggleableLayerIds = [ 'vessel1', 'vessel2' ];
+
+for (var i = 0; i < toggleableLayerIds.length; i++) {
+    var id = toggleableLayerIds[i];
+
+    var link = document.createElement('a');
+    link.href = '#';
+    link.className = 'active';
+    link.textContent = id;
+
+    link.onclick = function (e) {
+        var clickedLayer = this.textContent;
+        e.preventDefault();
+        e.stopPropagation();
+
+        var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+        if (visibility === 'visible') {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+            this.className = '';
+        } else {
+            this.className = 'active';
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+        }
+    };
+
+    var layers = document.getElementById('menu');
+    layers.appendChild(link);
+} 
     
 </script>
 
