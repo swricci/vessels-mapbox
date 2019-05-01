@@ -164,7 +164,18 @@ map.on('load', function() {
         map.getSource("vessel2").updateImage({ url: getPath2() });
     }, 200);
       
- 
+    map.addLayer({
+      'id': 'FKNMS zones',
+      'type': 'fill',
+      'source': {
+         'type': 'geojson',
+         'data': "https://raw.githubusercontent.com/swricci/mapbox-workshop/master/fknms_vect_latlon"
+      },
+      'paint': {
+         'fill-color': '#ffffff',
+         'fill-opacity': 0.5
+}
+      });
 });
 
 var toggleableLayerIds = [ 'vessel1', 'vessel2' ];
